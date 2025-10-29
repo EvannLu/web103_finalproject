@@ -2,9 +2,9 @@
 
 CodePath WEB103 Final Project
 
-Designed and developed by: [your names here]
+Designed and developed by: Evan Lu, James Chen, Eric Azayev
 
-🔗 Link to deployed app:
+🔗 Link to deployed app: https://github.com/EvannLu/web103_finalproject 
 
 ## About
 
@@ -18,7 +18,7 @@ Designed and developed by: [your names here]
 
 ## Tech Stack
 
-Frontend:
+Frontend: 
 
 Backend:
 
