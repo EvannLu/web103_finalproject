@@ -4,7 +4,7 @@ CodePath WEB103 Final Project
 
 Designed and developed by: Evan Lu, James Chen, Eric Azayev
 
-🔗 Link to deployed app: https://github.com/EvannLu/web103_finalproject 
+🔗 Link to deployed app: 
 
 ## About
 
