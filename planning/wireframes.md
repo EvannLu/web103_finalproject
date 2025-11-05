@@ -6,16 +6,15 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 [👉🏾👉🏾👉🏾 List the pages you expect to have in your app, with a ⭐ next to pages you have wireframed]
 
-## Wireframe 1: [page title]
+## Wireframe 1: Main Section ⭐
 
-[👉🏾👉🏾👉🏾 include wireframe 1]
+<img src='w1.png' alt='main section'>
 
-## Wireframe 2: [page title]
+## Wireframe 2: Profile Section ⭐
 
-[👉🏾👉🏾👉🏾 include wireframe 2]
+<img src='w2.png' alt='profile section'>
 
-## Wireframe 3: [page title]
+## Wireframe 3: Messaging Section ⭐
 
-[👉🏾👉🏾👉🏾 include wireframe 3]
+<img src='w3.png' alt='messaging section'>
 
-[👉🏾👉🏾👉🏾 include more wireframes as desired]
