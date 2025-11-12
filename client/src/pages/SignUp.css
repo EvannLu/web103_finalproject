@@ -1,0 +1,138 @@
+.signup-container {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: var(--primary-purple);
+}
+
+.signup-card {
+  background-color: var(--white);
+  color: var(--primary-purple);
+  border-radius: 24px;
+  padding: 48px;
+  max-width: 500px;
+  width: 100%;
+  box-shadow: 0 8px 32px var(--shadow);
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.signup-card h1 {
+  text-align: center;
+  margin-bottom: 8px;
+  color: var(--primary-purple);
+}
+
+.subtitle {
+  text-align: center;
+  color: var(--hover-purple);
+  margin-bottom: 32px;
+  font-size: 0.95rem;
+}
+
+.signup-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--primary-purple);
+}
+
+.form-group input,
+.form-group select {
+  padding: 12px 16px;
+  border: 1px solid var(--border-gray);
+  border-radius: 8px;
+  font-size: 1rem;
+  color: var(--primary-purple);
+  transition: all 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: var(--light-purple);
+  box-shadow: 0 0 0 3px rgba(74, 0, 112, 0.1);
+}
+
+.form-group select[multiple] {
+  padding: 8px;
+}
+
+.form-group select[multiple] option {
+  padding: 8px;
+  border-radius: 4px;
+  margin: 2px 0;
+}
+
+.form-group select[multiple] option:hover {
+  background-color: var(--light-purple);
+  color: var(--white);
+}
+
+.hint {
+  font-size: 0.8rem;
+  color: var(--hover-purple);
+  font-style: italic;
+}
+
+.signup-button {
+  margin-top: 12px;
+  padding: 14px;
+  background-color: var(--primary-purple);
+  color: var(--white);
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.signup-button:hover {
+  background-color: var(--light-purple);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--shadow);
+}
+
+.signup-button:active {
+  transform: translateY(0);
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 24px;
+  color: var(--hover-purple);
+  font-size: 0.95rem;
+}
+
+.login-link a {
+  color: var(--primary-purple);
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+.login-link a:hover {
+  opacity: 0.8;
+}
