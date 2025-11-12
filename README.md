@@ -40,7 +40,7 @@ To connect with other students, users need to create an account with their email
 
 ### Profile creation
 
-Users can add personal details, their major, and favorite hangout spots to find compatible hangout buddies.
+✅Users can add personal details, their major, and favorite hangout spots to find compatible hangout buddies.
 
 ### Swipe Functionality
 
@@ -52,11 +52,13 @@ Users can form hangout groups, invite friends, and schedule hangout plans.
 
 ### Chat functionality
 
-Users can chat with their hangout buddies and discuss their hangout plan. user has a list of GCIDs. When they open messages, they're shown all the gcs they're in.
+✅Users can chat with their hangout buddies and discuss their hangout plan. user has a list of GCIDs. When they open messages, they're shown all the gcs they're in.
 
-### User blocking
+### Home Functionality
 
-Users can block other users that they've had negative interactions with or don't want to hangout with.
+✅Home can be used to view Clubs, posts.
+✅Brew Random Group in /home
+✅User can access messages from /home
 
 
 ### [ADDITIONAL FEATURES GO HERE - ADD ALL FEATURES HERE IN THE FORMAT ABOVE; you will check these off and add gifs as you complete them]
