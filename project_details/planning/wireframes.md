@@ -8,13 +8,13 @@ Reference the Creating an Entity Relationship Diagram final project guide in the
 
 ## Wireframe 1: Main Section ⭐
 
-<img src='../w1.png' alt='main section'>
+<img src='./w1.png' alt='main section'>
 
 ## Wireframe 2: Profile Section ⭐
 
-<img src='../w2.png' alt='profile section'>
+<img src='./w2.png' alt='profile section'>
 
 ## Wireframe 3: Messaging Section ⭐
 
-<img src='../w3.png' alt='messaging section'>
+<img src='./w3.png' alt='messaging section'>
 

@@ -40,7 +40,9 @@ To connect with other students, users need to create an account with their email
 
 ### Profile creation
 
-Users can add personal details, their major, and favorite hangout spots to find compatible hangout buddies.
+✅Users can add personal details, their major, and favorite hangout spots to find compatible hangout buddies.
+<img width="1247" height="978" alt="profile_creation" src="https://github.com/user-attachments/assets/4379c7d0-7856-4d7b-ab10-79364e10ec19" />
+
 
 ### Swipe Functionality
 
@@ -52,11 +54,17 @@ Users can form hangout groups, invite friends, and schedule hangout plans.
 
 ### Chat functionality
 
-Users can chat with their hangout buddies and discuss their hangout plan. user has a list of GCIDs. When they open messages, they're shown all the gcs they're in.
+✅Users can chat with their hangout buddies and discuss their hangout plan. user has a list of GCIDs. When they open messages, they're shown all the gcs they're in.
+<img width="1915" height="966" alt="messages_page" src="https://github.com/user-attachments/assets/263c9eff-0ab9-48f8-86d9-3b35e02f8541" />
 
-### User blocking
 
-Users can block other users that they've had negative interactions with or don't want to hangout with.
+### Home Functionality
+
+✅Home can be used to view Clubs, posts.
+✅Brew Random Group in /home
+✅User can access messages from /home
+<img width="1890" height="982" alt="home_page" src="https://github.com/user-attachments/assets/8b018614-6c6d-46b6-bf64-a767ac8d4d1f" />
+
 
 
 ### [ADDITIONAL FEATURES GO HERE - ADD ALL FEATURES HERE IN THE FORMAT ABOVE; you will check these off and add gifs as you complete them]
