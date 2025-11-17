@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import "./SignUp.css";
+import { supabase } from "../supabaseClient";
 
 function SignUp() {
   const [currentTab, setCurrentTab] = useState(1);
@@ -14,6 +15,10 @@ function SignUp() {
   });
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   const [swipeDirection, setSwipeDirection] = useState(null);
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   const activities = [
     "Visit a museum",
@@ -93,10 +98,46 @@ function SignUp() {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form submitted:", formData);
-    // TODO: Handle form submission
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 1. Sign up the user (auth only)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (authError) throw authError;
+
+      if (authData.user) {
+        // 2. Insert their profile data into the 'profiles' table
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .insert({
+            id: authData.user.id, // Link to the auth.users id
+            display_name: formData.displayName,
+            borough: formData.borough,
+            year: formData.year,
+            activities: formData.activities,
+          });
+        
+        if (profileError) throw profileError;
+
+        alert(
+          "Sign up successful! Please check your email to confirm your account."
+        );
+        navigate("/home");
+      }
+
+    } catch (error) {
+      console.error("Error signing up:", error.message);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -333,6 +374,15 @@ function SignUp() {
             </div>
           )}
 
+          {/* Add an error message display */}
+          {error && (
+            <div className="tab-content">
+              <p className="error-message" style={{ color: "red" }}>
+                Error: {error}
+              </p>
+            </div>
+          )}
+
           {/* Navigation Buttons */}
           <div className="nav-buttons">
             {currentTab > 1 && (
@@ -340,6 +390,7 @@ function SignUp() {
                 type="button"
                 onClick={handlePrevious}
                 className="nav-btn"
+                disabled={loading}
               >
                 ← Previous
               </button>
@@ -353,8 +404,8 @@ function SignUp() {
                 Next →
               </button>
             ) : (
-              <button type="submit" className="nav-btn submit">
-                Sign Up
+              <button type="submit" className="nav-btn submit" disabled={loading}>
+                {loading ? "Signing Up..." : "Sign Up"}
               </button>
             )}
           </div>

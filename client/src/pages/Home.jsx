@@ -18,7 +18,7 @@ function Home() {
           <h2>Lexington Links</h2>
         </div>
         <div className="nav-links">
-          <Link to="/home" className="nav-button">
+          <Link to="/profile" className="nav-button">
             Profile
           </Link>
           <button className="nav-button">Brew Random Group</button>
