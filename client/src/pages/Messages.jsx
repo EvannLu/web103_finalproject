@@ -1,144 +1,240 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useAuth } from "../context/AuthContext";
+import { getFriends } from "../services/userService";
+import {
+  getUserConversations,
+  getOrCreateConversation,
+  getConversationMessages,
+  sendMessage,
+  markMessagesAsRead,
+} from "../services/messageService";
 import "./Messages.css";
 
 function Messages() {
-  const [selectedChat, setSelectedChat] = useState("CS_Club");
+  const { user } = useAuth();
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [friends, setFriends] = useState([]);
+  const [showFriendsList, setShowFriendsList] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  const chats = [
-    {
-      id: 1,
-      name: "CS_Club",
-      lastMessage: "See you at the hackathon!",
-      time: "2:30 PM",
-    },
-    {
-      id: 2,
-      name: "Art_Lovers",
-      lastMessage: "Museum trip this weekend?",
-      time: "1:15 PM",
-    },
-    {
-      id: 3,
-      name: "Foodies_NYC",
-      lastMessage: "Best pizza in Brooklyn 🍕",
-      time: "12:45 PM",
-    },
-    {
-      id: 4,
-      name: "Book_Club",
-      lastMessage: "Finished the chapter yet?",
-      time: "Yesterday",
-    },
-    {
-      id: 5,
-      name: "Fitness_Gang",
-      lastMessage: "Morning run tomorrow?",
-      time: "Yesterday",
-    },
-  ];
+  useEffect(() => {
+    if (user?.id) {
+      loadConversations();
+      loadFriends();
+    }
+  }, [user?.id]);
 
-  const messages = [
-    {
-      id: 1,
-      sender: "Alex",
-      text: "Hey everyone! Ready for the project?",
-      time: "2:15 PM",
-      isMe: false,
-    },
-    {
-      id: 2,
-      sender: "You",
-      text: "Definitely! What time are we meeting?",
-      time: "2:20 PM",
-      isMe: true,
-    },
-    {
-      id: 3,
-      sender: "Jordan",
-      text: "How about 3 PM at the library?",
-      time: "2:25 PM",
-      isMe: false,
-    },
-    {
-      id: 4,
-      sender: "You",
-      text: "Perfect! See you there 👍",
-      time: "2:30 PM",
-      isMe: true,
-    },
-  ];
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id);
+      markMessagesAsRead(selectedConversation.id, user.id);
+    }
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+      const data = await getUserConversations(user.id);
+      setConversations(data);
+    } catch (error) {
+      console.error("Error loading conversations:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFriends = async () => {
+    try {
+      const data = await getFriends(user.id);
+      setFriends(data);
+    } catch (error) {
+      console.error("Error loading friends:", error);
+    }
+  };
+
+  const loadMessages = async (conversationId) => {
+    try {
+      const data = await getConversationMessages(conversationId);
+      setMessages(data);
+    } catch (error) {
+      console.error("Error loading messages:", error);
+    }
+  };
+
+  const handleStartConversation = async (friend) => {
+    try {
+      const conversation = await getOrCreateConversation(user.id, friend.id);
+      setShowFriendsList(false);
+      
+      // Add other user info to conversation
+      const conversationWithUser = {
+        ...conversation,
+        otherUser: friend,
+      };
+      
+      setSelectedConversation(conversationWithUser);
+      loadConversations(); // Refresh list
+    } catch (error) {
+      console.error("Error starting conversation:", error);
+    }
+  };
+
+  const handleSendMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    try {
+      await sendMessage(selectedConversation.id, user.id, newMessage);
+      setNewMessage("");
+      loadMessages(selectedConversation.id);
+      loadConversations(); // Refresh to update last_message_at
+    } catch (error) {
+      console.error("Error sending message:", error);
+      alert("Failed to send message");
+    }
+  };
 
   return (
     <div className="messages-container">
       <div className="sidebar">
         <div className="sidebar-header">
           <Link to="/home" className="back-button">
-            ← Back to Main Page
+            ← Back
           </Link>
+          <button
+            className="new-chat-button"
+            onClick={() => setShowFriendsList(!showFriendsList)}
+          >
+            + New Chat
+          </button>
         </div>
 
-        <div className="search-section">
-          <input
-            type="text"
-            placeholder="Search chats..."
-            className="chat-search"
-          />
-        </div>
+        {showFriendsList && (
+          <div className="friends-list-popup">
+            <h4>Message a Friend</h4>
+            {friends.length === 0 ? (
+              <p className="no-friends">No friends yet. Add friends to chat!</p>
+            ) : (
+              friends.map((friend) => (
+                <div
+                  key={friend.id}
+                  className="friend-item"
+                  onClick={() => handleStartConversation(friend)}
+                >
+                  {friend.pfp && (
+                    <img src={friend.pfp} alt={friend.username} className="friend-avatar" />
+                  )}
+                  <span>{friend.username}</span>
+                </div>
+              ))
+            )}
+          </div>
+        )}
 
         <div className="chats-list">
-          {chats.map((chat) => (
-            <div
-              key={chat.id}
-              className={`chat-item ${
-                selectedChat === chat.name ? "active" : ""
-              }`}
-              onClick={() => setSelectedChat(chat.name)}
-            >
-              <div className="chat-avatar">{chat.name[0]}</div>
-              <div className="chat-info">
-                <h4>{chat.name}</h4>
-                <p className="last-message">{chat.lastMessage}</p>
-              </div>
-              <span className="chat-time">{chat.time}</span>
+          {loading ? (
+            <div className="loading">Loading conversations...</div>
+          ) : conversations.length === 0 ? (
+            <div className="empty-state">
+              <p>No conversations yet.</p>
+              <p>Start chatting with your friends!</p>
             </div>
-          ))}
+          ) : (
+            conversations.map((conv) => (
+              <div
+                key={conv.id}
+                className={`chat-item ${
+                  selectedConversation?.id === conv.id ? "active" : ""
+                }`}
+                onClick={() => setSelectedConversation(conv)}
+              >
+                <div className="chat-avatar">
+                  {conv.otherUser?.pfp ? (
+                    <img src={conv.otherUser.pfp} alt={conv.otherUser.username} />
+                  ) : (
+                    conv.otherUser?.username?.[0] || "?"
+                  )}
+                </div>
+                <div className="chat-info">
+                  <h4>{conv.otherUser?.username || "Unknown User"}</h4>
+                  <p className="last-message">
+                    {new Date(conv.last_message_at).toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
 
       <div className="chat-window">
-        <div className="chat-header">
-          <div className="chat-header-info">
-            <div className="chat-avatar-large">{selectedChat[0]}</div>
-            <h3>{selectedChat}</h3>
-          </div>
-        </div>
-
-        <div className="messages-area">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`message-bubble ${
-                message.isMe ? "my-message" : "their-message"
-              }`}
-            >
-              {!message.isMe && (
-                <strong className="sender-name">{message.sender}</strong>
-              )}
-              <p>{message.text}</p>
-              <span className="message-time">{message.time}</span>
+        {selectedConversation ? (
+          <>
+            <div className="chat-header">
+              <div className="chat-header-info">
+                <div className="chat-avatar-large">
+                  {selectedConversation.otherUser?.pfp ? (
+                    <img
+                      src={selectedConversation.otherUser.pfp}
+                      alt={selectedConversation.otherUser.username}
+                    />
+                  ) : (
+                    selectedConversation.otherUser?.username?.[0] || "?"
+                  )}
+                </div>
+                <h3>{selectedConversation.otherUser?.username || "Unknown User"}</h3>
+              </div>
             </div>
-          ))}
-        </div>
 
-        <div className="message-input-container">
-          <input
-            type="text"
-            placeholder="Chat here..."
-            className="message-input"
-          />
-          <button className="send-button">Send</button>
-        </div>
+            <div className="messages-area">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`message-bubble ${
+                    message.sender_id === user.id ? "my-message" : "their-message"
+                  }`}
+                >
+                  <p>{message.content}</p>
+                  <span className="message-time">
+                    {new Date(message.created_at).toLocaleTimeString()}
+                  </span>
+                </div>
+              ))}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <form className="message-input-container" onSubmit={handleSendMessage}>
+              <input
+                type="text"
+                placeholder="Type a message..."
+                className="message-input"
+                value={newMessage}
+                onChange={(e) => setNewMessage(e.target.value)}
+              />
+              <button type="submit" className="send-button">
+                Send
+              </button>
+            </form>
+          </>
+        ) : (
+          <div className="no-chat-selected">
+            <h3>Select a conversation or start a new chat</h3>
+            <p>Choose a friend from your conversations or click "+ New Chat"</p>
+          </div>
+        )}
       </div>
     </div>
   );

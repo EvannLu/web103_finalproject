@@ -1,18 +1,18 @@
 import express from "express";
 import {
-  getMessages,
-  getMessageById,
-  createMessage,
-  updateMessage,
-  deleteMessage,
+  getUserConversations,
+  getOrCreateConversation,
+  getConversationMessages,
+  sendMessage,
+  markAsRead,
 } from "../controllers/messages.js";
 
 const router = express.Router();
 
-router.get("/", getMessages);
-router.get("/:id", getMessageById);
-router.post("/", createMessage);
-router.put("/:id", updateMessage);
-router.delete("/:id", deleteMessage);
+router.get("/conversations/:userId", getUserConversations);
+router.post("/conversations", getOrCreateConversation);
+router.get("/conversations/:conversationId/messages", getConversationMessages);
+router.post("/send", sendMessage);
+router.post("/read", markAsRead);
 
 export default router;
