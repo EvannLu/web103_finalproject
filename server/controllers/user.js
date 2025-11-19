@@ -29,6 +29,23 @@ export const getUserById = async (req, res) => {
   }
 };
 
+// Get user by username
+export const getUserByUsername = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { data, error } = await supabase
+      .from("user")
+      .select("*")
+      .eq("username", username)
+      .single();
+
+    if (error) throw error;
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 // Create user
 export const createUser = async (req, res) => {
   try {
@@ -69,6 +86,102 @@ export const deleteUser = async (req, res) => {
 
     if (error) throw error;
     res.json({ message: "User deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Add friend
+export const addFriend = async (req, res) => {
+  try {
+    const { userId, friendId } = req.body;
+    
+    // Get current user
+    const { data: user, error: userError } = await supabase
+      .from("user")
+      .select("follows_ids")
+      .eq("id", userId)
+      .single();
+
+    if (userError) throw userError;
+
+    // Update follows_ids (add the friend)
+    const currentFollows = user.follows_ids || {};
+    currentFollows[friendId] = true;
+
+    const { data, error } = await supabase
+      .from("user")
+      .update({ follows_ids: currentFollows })
+      .eq("id", userId)
+      .select();
+
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Remove friend
+export const removeFriend = async (req, res) => {
+  try {
+    const { userId, friendId } = req.body;
+    
+    // Get current user
+    const { data: user, error: userError } = await supabase
+      .from("user")
+      .select("follows_ids")
+      .eq("id", userId)
+      .single();
+
+    if (userError) throw userError;
+
+    // Update follows_ids (remove the friend)
+    const currentFollows = user.follows_ids || {};
+    delete currentFollows[friendId];
+
+    const { data, error } = await supabase
+      .from("user")
+      .update({ follows_ids: currentFollows })
+      .eq("id", userId)
+      .select();
+
+    if (error) throw error;
+    res.json(data[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Get user's friends
+export const getFriends = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Get user's follows_ids
+    const { data: user, error: userError } = await supabase
+      .from("user")
+      .select("follows_ids")
+      .eq("id", id)
+      .single();
+
+    if (userError) throw userError;
+
+    const followsIds = user.follows_ids || {};
+    const friendIds = Object.keys(followsIds).filter(fId => followsIds[fId]);
+
+    if (friendIds.length === 0) {
+      return res.json([]);
+    }
+
+    // Fetch all friends' data
+    const { data: friends, error } = await supabase
+      .from("user")
+      .select("id, username, pfp, interests")
+      .in("id", friendIds);
+
+    if (error) throw error;
+    res.json(friends);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

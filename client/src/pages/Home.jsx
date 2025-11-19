@@ -6,6 +6,7 @@ import {
   updatePost,
   deletePost,
 } from "../services/postService";
+import { getFriends } from "../services/userService";
 import { useAuth } from "../context/AuthContext";
 import "./Home.css";
 import "./Posts.css";
@@ -28,6 +29,10 @@ function Home() {
   const [error, setError] = useState(null);
   const [editingPostId, setEditingPostId] = useState(null);
 
+  // Friends state
+  const [friends, setFriends] = useState([]);
+  const [friendsLoading, setFriendsLoading] = useState(false);
+
   // Form state
   const [newPost, setNewPost] = useState({
     caption: "",
@@ -41,10 +46,25 @@ function Home() {
     image_url: "",
   });
 
-  // Fetch posts on component mount
+  // Fetch posts and friends on component mount
   useEffect(() => {
     fetchPosts();
-  }, []);
+    if (user?.id) {
+      fetchFriends();
+    }
+  }, [user?.id]);
+
+  const fetchFriends = async () => {
+    try {
+      setFriendsLoading(true);
+      const data = await getFriends(user.id);
+      setFriends(data || []);
+    } catch (err) {
+      console.error("Error fetching friends:", err);
+    } finally {
+      setFriendsLoading(false);
+    }
+  };
 
   const fetchPosts = async () => {
     try {
@@ -164,6 +184,42 @@ function Home() {
               <button className="join-button">Join Group</button>
             </div>
           ))}
+        </div>
+
+        {/* Friends Section */}
+        <div className="friends-section">
+          <div className="friends-header">
+            <h2>My Friends</h2>
+            <Link to="/user-lookup" className="add-friend-link">
+              + Add Friends
+            </Link>
+          </div>
+          
+          {friendsLoading ? (
+            <div className="loading">Loading friends...</div>
+          ) : friends.length === 0 ? (
+            <div className="empty-state">
+              <p>No friends yet. Start adding friends from User Lookup!</p>
+            </div>
+          ) : (
+            <div className="friends-grid">
+              {friends.map((friend) => (
+                <div key={friend.id} className="friend-card">
+                  {friend.pfp && (
+                    <img src={friend.pfp} alt={friend.username} className="friend-pfp" />
+                  )}
+                  <div className="friend-info">
+                    <h4>{friend.username}</h4>
+                    {friend.interests && (
+                      <div className="friend-interests">
+                        {Object.keys(friend.interests).slice(0, 3).join(", ")}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Posts Section */}

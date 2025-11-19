@@ -1,12 +1,15 @@
 import { useState } from "react";
-import { getUserById } from "../services/userService";
+import { getUserByUsername, addFriend, removeFriend } from "../services/userService";
+import { useAuth } from "../context/AuthContext";
 import "./UserLookup.css";
 
 function UserLookup() {
-  const [userId, setUserId] = useState("");
+  const { user } = useAuth(); // Get current logged-in user
+  const [username, setUsername] = useState("");
   const [userData, setUserData] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const handleLookup = async (e) => {
     e.preventDefault();
@@ -15,34 +18,51 @@ function UserLookup() {
     setUserData(null);
 
     try {
-      const data = await getUserById(userId);
+      const data = await getUserByUsername(username);
       console.log("User data received:", data);
       setUserData(data);
     } catch (err) {
       console.error("Error fetching user:", err);
-      setError(err.response?.data?.error || err.message || "Failed to fetch user");
+      setError(err.response?.data?.error || err.message || "User not found");
     } finally {
       setLoading(false);
     }
   };
 
+  const handleAddFriend = async () => {
+    if (!user?.id || !userData?.id) return;
+    
+    setActionLoading(true);
+    try {
+      await addFriend(user.id, userData.id);
+      alert(`Added ${userData.username} as a friend!`);
+    } catch (err) {
+      console.error("Error adding friend:", err);
+      alert("Failed to add friend: " + (err.response?.data?.error || err.message));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const isSelf = user?.id && userData?.id && user.id.toString() === userData.id.toString();
+
   return (
     <div className="user-lookup-container">
       <div className="user-lookup-card">
-        <h2>User Lookup Test</h2>
-        <p>Enter a user ID to fetch their username from the database</p>
+        <h2>User Lookup</h2>
+        <p>Enter a username to find and add friends</p>
 
         <form onSubmit={handleLookup} className="lookup-form">
           <input
             type="text"
-            value={userId}
-            onChange={(e) => setUserId(e.target.value)}
-            placeholder="Enter user ID (e.g., 1)"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Enter username (e.g., George Demo)"
             className="lookup-input"
             required
           />
           <button type="submit" className="lookup-button" disabled={loading}>
-            {loading ? "Loading..." : "Lookup User"}
+            {loading ? "Loading..." : "Search User"}
           </button>
         </form>
 
@@ -56,12 +76,35 @@ function UserLookup() {
           <div className="user-result">
             <h3>User Found!</h3>
             <div className="user-details">
+              {userData.pfp && (
+                <img src={userData.pfp} alt={userData.username} className="user-pfp" />
+              )}
               <p><strong>ID:</strong> {userData.id}</p>
               <p><strong>Username:</strong> {userData.username || "(no username)"}</p>
-              <details>
-                <summary>Full Data</summary>
-                <pre>{JSON.stringify(userData, null, 2)}</pre>
-              </details>
+              {userData.interests && (
+                <div>
+                  <strong>Interests:</strong>
+                  <div className="interests-tags">
+                    {Object.keys(userData.interests).map(interest => (
+                      <span key={interest} className="interest-tag">{interest}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {!isSelf && user?.id && (
+                <button 
+                  onClick={handleAddFriend} 
+                  className="add-friend-button"
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? "Adding..." : "Add Friend"}
+                </button>
+              )}
+              
+              {isSelf && (
+                <p className="self-note">This is you!</p>
+              )}
             </div>
           </div>
         )}
