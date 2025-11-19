@@ -145,6 +145,7 @@ function Home() {
     setEditForm({ caption: "", content: "", image_url: "" });
   };
 
+
   return (
     <div className="home-container">
       <nav className="navbar">
@@ -152,7 +153,7 @@ function Home() {
           <h2>Lexington Links</h2>
         </div>
         <div className="nav-links">
-          <Link to="/home" className="nav-button">
+          <Link to={user?.id ? `/profile/${user.id}` : '/'} className="nav-button">
             Profile
           </Link>
           <button className="nav-button">Brew Random Group</button>
