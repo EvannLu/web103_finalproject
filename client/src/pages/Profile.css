@@ -140,3 +140,26 @@
   background: #ff6b6b;
   color: white;
 }
+
+.profile-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary-purple);
+  margin-right: 20px;
+}
+
+.post-image {
+  width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
+
+.post-caption {
+  font-size: 1rem;
+  color: #333;
+  white-space: pre-wrap;
+}

@@ -1,7 +1,11 @@
 import { Link } from "react-router-dom";
 import "./Home.css";
+import { useState, useEffect } from "react"; // ⬅️ IMPORT useState and useEffect
+import { supabase } from "../supabaseClient";
 
 function Home() {
+  const [currentUserId, setCurrentUserId] = useState(null);
+
   const groups = [
     { id: 1, name: "CS_Club", image: "💻", members: 45 },
     { id: 2, name: "Art_Lovers", image: "🎨", members: 32 },
@@ -11,6 +15,16 @@ function Home() {
     { id: 6, name: "Music_Makers", image: "🎵", members: 41 },
   ];
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setCurrentUserId(user.id);
+      }
+    };
+    fetchUser();
+  }, []);
+
   return (
     <div className="home-container">
       <nav className="navbar">
@@ -18,7 +32,7 @@ function Home() {
           <h2>Lexington Links</h2>
         </div>
         <div className="nav-links">
-          <Link to="/profile" className="nav-button">
+          <Link to={currentUserId ? `/profile/${currentUserId}` : '/'} className="nav-button">
             Profile
           </Link>
           <button className="nav-button">Brew Random Group</button>

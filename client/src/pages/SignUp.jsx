@@ -7,6 +7,7 @@ function SignUp() {
   const [currentTab, setCurrentTab] = useState(1);
   const [formData, setFormData] = useState({
     email: "",
+    username: "",
     displayName: "",
     password: "",
     activities: [],
@@ -118,10 +119,12 @@ function SignUp() {
           .from("profiles")
           .insert({
             id: authData.user.id, // Link to the auth.users id
+            username: formData.username,
             display_name: formData.displayName,
             borough: formData.borough,
             year: formData.year,
-            activities: formData.activities,
+            interests: formData.activities,
+            pfp_url: "",
           });
         
         if (profileError) throw profileError;
@@ -197,6 +200,19 @@ function SignUp() {
                   value={formData.password}
                   onChange={handleInputChange}
                   placeholder="Choose a secure password"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="username">Username</label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleInputChange}
+                  placeholder="Choose a unique @username"
                   required
                 />
               </div>
@@ -412,7 +428,7 @@ function SignUp() {
         </form>
 
         <p className="login-link">
-          Already have an account? <Link to="/home">Log in</Link>
+          Already have an account? <Link to="/login">Log in</Link>
         </p>
       </div>
     </div>
