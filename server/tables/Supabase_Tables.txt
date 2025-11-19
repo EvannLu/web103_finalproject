@@ -1,0 +1,50 @@
+LEXINGTON LINKS DATABASE SCHEMA
+================================================================================
+
+TABLE: user
+--------------------------------------------------------------------------------
+Column Name                    Type
+--------------------------------------------------------------------------------
+id                             integer
+created_at                     timestamp
+username                       string
+pfp                            string
+interests                      jsonb/object
+post_ids                       nullable
+group_ids                      nullable
+follows_ids                    nullable
+message_ids                    nullable
+
+TABLE: post
+--------------------------------------------------------------------------------
+Column Name                    Type
+--------------------------------------------------------------------------------
+id                             integer
+created_at                     timestamp
+user_id                        string
+image_url                      nullable
+caption                        string
+content                        string
+user_ids                       nullable
+group_limit                    nullable
+
+TABLE: group
+--------------------------------------------------------------------------------
+Column Name                    Type
+--------------------------------------------------------------------------------
+id                             integer
+created_at                     timestamp
+name                           string
+common_interests               jsonb/object
+messages_id                    jsonb/object
+user_ids                       jsonb/object
+
+TABLE: messages
+--------------------------------------------------------------------------------
+Column Name                    Type
+--------------------------------------------------------------------------------
+id                             integer
+created_at                     timestamp
+messages                       jsonb/object
+user_ids                       jsonb/object
+

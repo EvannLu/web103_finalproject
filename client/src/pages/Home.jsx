@@ -1,7 +1,18 @@
 import { Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import {
+  getAllPosts,
+  createPost,
+  updatePost,
+  deletePost,
+} from "../services/postService";
+import { useAuth } from "../context/AuthContext";
 import "./Home.css";
+import "./Posts.css";
 
 function Home() {
+  const { user } = useAuth(); // Get current user from auth context
+  
   const groups = [
     { id: 1, name: "CS_Club", image: "💻", members: 45 },
     { id: 2, name: "Art_Lovers", image: "🎨", members: 32 },
@@ -10,6 +21,109 @@ function Home() {
     { id: 5, name: "Fitness_Gang", image: "💪", members: 54 },
     { id: 6, name: "Music_Makers", image: "🎵", members: 41 },
   ];
+
+  // Post state
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [editingPostId, setEditingPostId] = useState(null);
+
+  // Form state
+  const [newPost, setNewPost] = useState({
+    caption: "",
+    content: "",
+    image_url: "",
+  });
+
+  const [editForm, setEditForm] = useState({
+    caption: "",
+    content: "",
+    image_url: "",
+  });
+
+  // Fetch posts on component mount
+  useEffect(() => {
+    fetchPosts();
+  }, []);
+
+  const fetchPosts = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getAllPosts();
+      console.log("Frontend received posts:", data); // Debug log
+      setPosts(data || []);
+    } catch (err) {
+      setError("Failed to load posts. Make sure the server is running.");
+      console.error("Error fetching posts:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreatePost = async (e) => {
+    e.preventDefault();
+    try {
+      const postData = {
+        caption: newPost.caption,
+        content: newPost.content,
+        user_id: user?.id || "anonymous", // Use actual user ID from auth context
+      };
+      // Only include image_url if it's not empty
+      if (newPost.image_url && newPost.image_url.trim()) {
+        postData.image_url = newPost.image_url;
+      }
+      await createPost(postData);
+      setNewPost({ caption: "", content: "", image_url: "" });
+      fetchPosts(); // Refresh the list
+    } catch (err) {
+      alert("Failed to create post: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleDeletePost = async (id) => {
+    if (window.confirm("Are you sure you want to delete this post?")) {
+      try {
+        await deletePost(id);
+        fetchPosts(); // Refresh the list
+      } catch (err) {
+        alert("Failed to delete post: " + (err.response?.data?.error || err.message));
+      }
+    }
+  };
+
+  const handleEditClick = (post) => {
+    setEditingPostId(post.id);
+    setEditForm({
+      caption: post.caption || "",
+      content: post.content || "",
+      image_url: post.image_url || "",
+    });
+  };
+
+  const handleUpdatePost = async (e, id) => {
+    e.preventDefault();
+    try {
+      const updateData = {
+        caption: editForm.caption,
+        content: editForm.content,
+      };
+      // Only include image_url if it's not empty
+      if (editForm.image_url && editForm.image_url.trim()) {
+        updateData.image_url = editForm.image_url;
+      }
+      await updatePost(id, updateData);
+      setEditingPostId(null);
+      fetchPosts(); // Refresh the list
+    } catch (err) {
+      alert("Failed to update post: " + (err.response?.data?.error || err.message));
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPostId(null);
+    setEditForm({ caption: "", content: "", image_url: "" });
+  };
 
   return (
     <div className="home-container">
@@ -50,6 +164,169 @@ function Home() {
               <button className="join-button">Join Group</button>
             </div>
           ))}
+        </div>
+
+        {/* Posts Section */}
+        <div className="post-feed">
+          <h2>Community Posts</h2>
+
+          {/* Create Post Form */}
+          <div className="create-post-card">
+            <h3>Create a New Post</h3>
+            <form className="create-post-form" onSubmit={handleCreatePost}>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Caption"
+                value={newPost.caption}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, caption: e.target.value })
+                }
+                required
+              />
+              <textarea
+                className="form-textarea"
+                placeholder="What's on your mind?"
+                value={newPost.content}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, content: e.target.value })
+                }
+                required
+              />
+              <input
+                type="url"
+                className="form-input"
+                placeholder="Image URL (optional)"
+                value={newPost.image_url}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, image_url: e.target.value })
+                }
+              />
+              <div className="form-actions">
+                <button type="submit" className="btn btn-primary">
+                  Post
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Error Message */}
+          {error && <div className="error">{error}</div>}
+
+          {/* Loading State */}
+          {loading && <div className="loading">Loading posts...</div>}
+
+          {/* Posts List */}
+          {!loading && !error && (
+            <div className="posts-container">
+              {posts.length === 0 ? (
+                <div className="empty-state">
+                  <h3>No posts yet</h3>
+                  <p>Be the first to create a post!</p>
+                </div>
+              ) : (
+                posts.map((post) => (
+                  <div key={post.id} className="post-card">
+                    <div className="post-header">
+                      <div className="post-meta">
+                        <div className="post-user">
+                          {post.user?.username || "Anonymous"}
+                        </div>
+                        <div className="post-date">
+                          {post.created_at
+                            ? new Date(post.created_at).toLocaleString()
+                            : "Just now"}
+                        </div>
+                      </div>
+                      <div className="post-actions">
+                        <button
+                          className="btn-icon btn-edit"
+                          onClick={() => handleEditClick(post)}
+                          title="Edit"
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button
+                          className="btn-icon btn-delete"
+                          onClick={() => handleDeletePost(post.id)}
+                          title="Delete"
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </div>
+
+                    {editingPostId === post.id ? (
+                      <form
+                        className="edit-post-form"
+                        onSubmit={(e) => handleUpdatePost(e, post.id)}
+                      >
+                        <input
+                          type="text"
+                          className="form-input"
+                          placeholder="Caption"
+                          value={editForm.caption}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, caption: e.target.value })
+                          }
+                          required
+                        />
+                        <textarea
+                          className="form-textarea"
+                          placeholder="Content"
+                          value={editForm.content}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, content: e.target.value })
+                          }
+                          required
+                        />
+                        <input
+                          type="url"
+                          className="form-input"
+                          placeholder="Image URL (optional)"
+                          value={editForm.image_url}
+                          onChange={(e) =>
+                            setEditForm({ ...editForm, image_url: e.target.value })
+                          }
+                        />
+                        <div className="form-actions">
+                          <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </button>
+                          <button type="submit" className="btn btn-primary">
+                            Update
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="post-content">
+                        {post.caption && (
+                          <div className="post-caption">{post.caption}</div>
+                        )}
+                        {post.content && (
+                          <div className="post-text">{post.content}</div>
+                        )}
+                        {post.image_url && (
+                          <img
+                            src={post.image_url}
+                            alt={post.caption || "Post"}
+                            className="post-image"
+                            onError={(e) => {
+                              e.target.style.display = "none";
+                            }}
+                          />
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </main>
     </div>

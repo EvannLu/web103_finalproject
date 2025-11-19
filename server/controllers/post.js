@@ -3,11 +3,53 @@ import { supabase } from "../config/supabase.js";
 // Get all posts
 export const getPosts = async (req, res) => {
   try {
-    const { data, error } = await supabase.from("post").select("*");
+    console.log("=== FETCHING POSTS - VERSION 2.0 ===");
+    
+    // Get all posts
+    const { data: posts, error: postsError } = await supabase
+      .from("post")
+      .select("*")
+      .order("created_at", { ascending: false });
 
-    if (error) throw error;
-    res.json(data);
+    if (postsError) throw postsError;
+    
+    console.log("Posts fetched:", posts);
+
+    // For each post, fetch the user - EXACTLY like user lookup does
+    const postsWithUsers = [];
+    for (const post of posts) {
+      console.log(`\n--- Processing post ${post.id} ---`);
+      console.log(`Post user_id: "${post.user_id}" (type: ${typeof post.user_id})`);
+      
+      if (post.user_id && post.user_id !== 'anonymous') {
+        console.log(`Fetching user with id: "${post.user_id}"`);
+        
+        // Fetch user EXACTLY like getUserById does
+        const { data: user, error: userError } = await supabase
+          .from("user")
+          .select("*")
+          .eq("id", post.user_id)
+          .single();
+        
+        console.log("User fetch result:", user);
+        console.log("User fetch error:", userError);
+        
+        postsWithUsers.push({
+          ...post,
+          user: user
+        });
+      } else {
+        console.log("Skipping user fetch (anonymous or no user_id)");
+        postsWithUsers.push(post);
+      }
+    }
+
+    console.log("\n=== FINAL RESULT ===");
+    console.log(JSON.stringify(postsWithUsers, null, 2));
+    
+    res.json(postsWithUsers);
   } catch (error) {
+    console.error("Error fetching posts:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -18,7 +60,13 @@ export const getPostById = async (req, res) => {
     const { id } = req.params;
     const { data, error } = await supabase
       .from("post")
-      .select("*")
+      .select(`
+        *,
+        user:user!user_id (
+          id,
+          username
+        )
+      `)
       .eq("id", id)
       .single();
 
