@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
-import { supabase } from "../supabaseClient";
+import { useAuth } from "../context/AuthContext";
 import "./SignUp.css"; // Reuse your existing styles!
 
 function Login() {
@@ -11,6 +11,7 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleInputChange = (e) => {
     setFormData({
@@ -25,19 +26,8 @@ function Login() {
     setError(null);
 
     try {
-      // 🔑 Use the signInWithPassword function for login
-      const { error } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.password,
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      // Login successful, redirect to the home page
-      navigate("/home"); 
-
+      await login(formData.email, formData.password);
+      navigate("/home");
     } catch (error) {
       console.error("Login error:", error.message);
       setError(error.message);

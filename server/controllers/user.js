@@ -96,6 +96,10 @@ export const addFriend = async (req, res) => {
   try {
     const { userId, friendId } = req.body;
     
+    console.log('=== ADD FRIEND DEBUG ===');
+    console.log('User ID:', userId);
+    console.log('Friend ID:', friendId);
+    
     // Get current user
     const { data: user, error: userError } = await supabase
       .from("user")
@@ -104,10 +108,14 @@ export const addFriend = async (req, res) => {
       .single();
 
     if (userError) throw userError;
+    
+    console.log('Current follows_ids:', user.follows_ids);
 
     // Update follows_ids (add the friend)
     const currentFollows = user.follows_ids || {};
     currentFollows[friendId] = true;
+    
+    console.log('Updated follows_ids:', currentFollows);
 
     const { data, error } = await supabase
       .from("user")
@@ -115,9 +123,18 @@ export const addFriend = async (req, res) => {
       .eq("id", userId)
       .select();
 
-    if (error) throw error;
-    res.json(data[0]);
+    if (error) {
+      console.error('Update error:', error);
+      throw error;
+    }
+    
+    console.log('Database response:', data);
+    console.log('First item:', data?.[0]);
+    console.log('=== END ADD FRIEND DEBUG ===');
+    
+    res.json(data?.[0] || { success: true });
   } catch (error) {
+    console.error('Error in addFriend:', error);
     res.status(500).json({ error: error.message });
   }
 };

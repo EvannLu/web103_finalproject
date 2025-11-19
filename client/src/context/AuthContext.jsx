@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import { supabase } from "../supabaseClient";
 
 const AuthContext = createContext();
 
@@ -11,30 +12,125 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  // TODO: Replace with real authentication when ready
-  // For now, we're simulating being logged in as George Demo
-  const [user, setUser] = useState({
-    id: "1", // George Demo's actual ID in the database
-    username: "George Demo",
-    email: "george@example.com",
-  });
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const [isAuthenticated, setIsAuthenticated] = useState(true);
-
-  // Mock login function (replace later with real auth)
-  const login = async (email, password) => {
-    // TODO: Call real login API
-    console.log("Mock login:", email);
-    setIsAuthenticated(true);
-    setUser({
-      id: "george-demo-id",
-      username: "George Demo",
-      email: email,
+  // Initialize auth state on mount
+  useEffect(() => {
+    // Check active sessions and sets the user
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        loadUserData(session.user.id);
+      } else {
+        setLoading(false);
+      }
     });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        loadUserData(session.user.id);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setLoading(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Load user data from your 'user' table
+  const loadUserData = async (authUserId) => {
+    try {
+      // First check if user exists in 'user' table
+      const { data: userData, error } = await supabase
+        .from("user")
+        .select("*")
+        .eq("id", authUserId)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // User doesn't exist in user table yet, create them
+        const { data: authUser } = await supabase.auth.getUser();
+        const { data: newUser, error: insertError } = await supabase
+          .from("user")
+          .insert([{
+            id: authUserId,
+            username: authUser.user.email.split('@')[0], // Default username from email
+            display_name: null,
+            pfp: null,
+            bio: null,
+            borough: null,
+            year: null,
+            interests: {},
+            follows_ids: {},
+          }])
+          .select()
+          .single();
+
+        if (insertError) throw insertError;
+        
+        setUser(newUser);
+        setIsAuthenticated(true);
+      } else if (error) {
+        throw error;
+      } else {
+        setUser(userData);
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+      setUser(null);
+      setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Mock logout function
-  const logout = () => {
+  // Login function
+  const login = async (email, password) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) throw error;
+    // User will be loaded via onAuthStateChange listener
+  };
+
+  // Signup function
+  const signup = async (email, password, username) => {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) throw error;
+    
+    // Create user in 'user' table
+    if (data.user) {
+      await supabase.from("user").insert([{
+        id: data.user.id,
+        username: username || email.split('@')[0],
+        display_name: null,
+        pfp: null,
+        bio: null,
+        borough: null,
+        year: null,
+        interests: {},
+        follows_ids: {},
+      }]);
+    }
+    
+    return data;
+  };
+
+  // Logout function
+  const logout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
     setUser(null);
     setIsAuthenticated(false);
   };
@@ -42,7 +138,9 @@ export const AuthProvider = ({ children }) => {
   const value = {
     user,
     isAuthenticated,
+    loading,
     login,
+    signup,
     logout,
     setUser,
   };

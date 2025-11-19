@@ -23,7 +23,7 @@ function UserLookup() {
       setUserData(data);
     } catch (err) {
       console.error("Error fetching user:", err);
-      setError(err.response?.data?.error || err.message || "User not found");
+      setError("User under this name not found. Please check the spelling and try again.");
     } finally {
       setLoading(false);
     }
@@ -79,7 +79,6 @@ function UserLookup() {
               {userData.pfp && (
                 <img src={userData.pfp} alt={userData.username} className="user-pfp" />
               )}
-              <p><strong>ID:</strong> {userData.id}</p>
               <p><strong>Username:</strong> {userData.username || "(no username)"}</p>
               {userData.interests && (
                 <div>

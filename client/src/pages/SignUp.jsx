@@ -105,7 +105,7 @@ function SignUp() {
     setError(null);
 
     try {
-      // 1. Sign up the user (auth only)
+      // 1. Sign up the user with Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -114,25 +114,36 @@ function SignUp() {
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Insert their profile data into the 'profiles' table
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .insert({
-            id: authData.user.id, // Link to the auth.users id
+        // 2. Create user in the unified 'user' table
+        // Convert activities array to object format for interests
+        const interestsObject = {};
+        formData.activities.forEach(activity => {
+          interestsObject[activity] = true;
+        });
+
+        const { error: userError } = await supabase
+          .from("user")
+          .insert([{
+            id: authData.user.id, // Use Supabase auth UUID
             username: formData.username,
             display_name: formData.displayName,
+            pfp: null,
+            bio: null,
             borough: formData.borough,
             year: formData.year,
-            interests: formData.activities,
-            pfp_url: "",
-          });
+            interests: interestsObject,
+            follows_ids: {},
+            post_ids: null,
+            group_ids: null,
+            message_ids: null,
+          }]);
         
-        if (profileError) throw profileError;
+        if (userError) throw userError;
 
         alert(
           "Sign up successful! Please check your email to confirm your account."
         );
-        navigate("/home");
+        navigate("/login");
       }
 
     } catch (error) {

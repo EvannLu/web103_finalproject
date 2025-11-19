@@ -4,13 +4,12 @@ import { supabase } from "../config/supabase.js";
 export const getUserConversations = async (req, res) => {
   try {
     const { userId } = req.params;
-    const userIdNum = parseInt(userId);
 
     // Get conversations where user is participant
     const { data: conversations, error } = await supabase
       .from("conversations")
       .select("*")
-      .or(`user_id_1.eq.${userIdNum},user_id_2.eq.${userIdNum}`)
+      .or(`user_id_1.eq.${userId},user_id_2.eq.${userId}`)
       .order("last_message_at", { ascending: false });
 
     if (error) throw error;
@@ -18,7 +17,7 @@ export const getUserConversations = async (req, res) => {
     // For each conversation, get the other user's info
     const conversationsWithUsers = await Promise.all(
       conversations.map(async (conv) => {
-        const otherUserId = conv.user_id_1 === userIdNum ? conv.user_id_2 : conv.user_id_1;
+        const otherUserId = conv.user_id_1 === userId ? conv.user_id_2 : conv.user_id_1;
         
         const { data: otherUser } = await supabase
           .from("user")
@@ -43,7 +42,8 @@ export const getUserConversations = async (req, res) => {
 export const getOrCreateConversation = async (req, res) => {
   try {
     const { user1Id, user2Id } = req.body;
-    const [smallerId, largerId] = [user1Id, user2Id].sort((a, b) => a - b);
+    // Sort UUIDs alphabetically to ensure consistent ordering
+    const [smallerId, largerId] = [user1Id, user2Id].sort();
 
     // Try to find existing conversation
     let { data: conversation, error: findError } = await supabase

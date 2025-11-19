@@ -45,7 +45,7 @@ function Profile() {
 
       // 2. Fetch the TARGET Profile (using the ID from the URL/target)
       const { data: profile, error: profileError } = await supabase
-        .from("profiles")
+        .from("user")
         .select("*")
         .eq("id", targetId)
         .single();
@@ -55,15 +55,15 @@ function Profile() {
       if (profile) {
         setFormData({
           username: profile.username || "",
-          display_name: profile.display_name || "",
+          display_name: profile.display_name || profile.username || "",
           bio: profile.bio || "",
-          pfp_url: profile.pfp_url || defaultPfp,
+          pfp_url: profile.pfp || defaultPfp,
         });
       }
 
       // 3. Fetch Posts for the TARGET Profile
       const { data: postsData } = await supabase
-        .from("posts")
+        .from("post")
         .select("*")
         .eq("user_id", targetId)
         .order("created_at", { ascending: false });
@@ -107,13 +107,12 @@ function Profile() {
       }
 
       const { error } = await supabase
-        .from("profiles")
+        .from("user")
         .update({
           username: formData.username,
           display_name: formData.display_name,
           bio: formData.bio,
-          pfp_url: pfpUrl,
-          updated_at: new Date(),
+          pfp: pfpUrl,
         })
         .eq("id", currentViewer.id); // Must use currentViewer.id for RLS check
 
@@ -140,18 +139,13 @@ function Profile() {
         imageUrl = await uploadFile(postImage);
       }
 
-      const groupDataExample = {
-        is_group_post: false,
-        group_name: null
-      };
-
       const { error } = await supabase
-        .from('posts')
+        .from('post')
         .insert([{ 
           user_id: currentViewer.id, // Must use currentViewer.id
           caption: postCaption,
           image_url: imageUrl,
-          group_data: groupDataExample
+          content: postCaption, // Add content field to match your schema
         }]);
 
       if (error) throw error;
